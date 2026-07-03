@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 100% 98%;
+  --foreground: 220 38% 16%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 38% 16%;
+  --primary: 218 76% 58%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 214 62% 95%;
+  --secondary-foreground: 220 38% 18%;
+  --muted: 214 50% 96%;
+  --muted-foreground: 216 18% 45%;
+  --accent: 202 100% 95%;
+  --accent-foreground: 214 65% 24%;
+  --border: 214 38% 88%;
+  --input: 214 38% 88%;
+  --ring: 218 76% 58%;
+  --success: 152 58% 88%;
+  --success-foreground: 154 71% 24%;
+  --warning: 39 100% 91%;
+  --warning-foreground: 31 92% 33%;
+  --danger: 0 100% 95%;
+  --danger-foreground: 0 74% 42%;
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply min-h-screen bg-background font-sans text-foreground antialiased;
+  background-image:
+    radial-gradient(circle at top left, rgba(147, 197, 253, 0.18), transparent 30%),
+    radial-gradient(circle at top right, rgba(191, 219, 254, 0.28), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.95));
+}
+
+#root {
+  @apply min-h-screen;
+}
+
+@layer base {
+  h1 {
+    @apply text-3xl font-semibold tracking-tight text-slate-950 md:text-4xl;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold tracking-tight text-slate-950;
+  }
+
+  h3 {
+    @apply text-lg font-semibold text-slate-900;
+  }
+
+  p {
+    @apply text-sm leading-6 text-slate-600;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply rounded-[2rem] border border-white/70 bg-white/85 shadow-float backdrop-blur;
+  }
+}

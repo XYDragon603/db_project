@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedMinder Preview</title>
+  <style>
+    :root {
+      --bg: #f4f9ff;
+      --bg-strong: #eaf3ff;
+      --card: rgba(255, 255, 255, 0.92);
+      --text: #162033;
+      --muted: #61708a;
+      --primary: #4a7ef0;
+      --primary-soft: #e8f0ff;
+      --border: #dbe6f5;
+      --success-bg: #e5f7ef;
+      --success-text: #167a49;
+      --warning-bg: #fff3dd;
+      --warning-text: #9a6414;
+      --danger-bg: #ffe8eb;
+      --danger-text: #c43851;
+      --shadow: 0 24px 50px -34px rgba(59, 92, 168, 0.35);
+      --radius-xl: 26px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(130, 180, 255, 0.22), transparent 22%),
+        radial-gradient(circle at top right, rgba(194, 222, 255, 0.28), transparent 20%),
+        linear-gradient(180deg, #fbfdff 0%, var(--bg) 100%);
+    }
+
+    .page {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(255,255,255,0.94), rgba(237,245,255,0.88));
+      border: 1px solid rgba(255,255,255,0.8);
+      box-shadow: var(--shadow);
+      border-radius: 34px;
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 40px;
+      line-height: 1.1;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .eyebrow {
+      color: var(--primary);
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      font-size: 12px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .sub {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 22px;
+    }
+
+    .sidebar {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.84);
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .brand-mark {
+      width: 48px;
+      height: 48px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #8bc3ff, #4a7ef0);
+    }
+
+    .brand h3 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .brand p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      color: #5b6982;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .nav-item.active {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .promo {
+      margin-top: 24px;
+      padding: 16px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #eff5ff, #ffffff);
+    }
+
+    .promo strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .topbar {
+      background: rgba(255,255,255,0.86);
+      border: 1px solid rgba(255,255,255,0.82);
+      box-shadow: var(--shadow);
+      border-radius: 28px;
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .search {
+      flex: 1;
+      max-width: 430px;
+      padding: 14px 18px;
+      border-radius: 18px;
+      background: #fff;
+      border: 1px solid var(--border);
+      color: #95a0b2;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .badge,
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .badge.success { background: var(--success-bg); color: var(--success-text); }
+    .badge.warning { background: var(--warning-bg); color: var(--warning-text); }
+    .badge.danger { background: var(--danger-bg); color: var(--danger-text); }
+    .badge.neutral { background: #eef3fb; color: #5f6f89; }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.84);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 23px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .med-list,
+    .stack {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .med-item {
+      display: grid;
+      grid-template-columns: 90px minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.82);
+    }
+
+    .med-time {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .med-time span {
+      display: block;
+      color: var(--primary);
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .med-name {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .button {
+      border-radius: 16px;
+      border: none;
+      padding: 12px 16px;
+      font-weight: 700;
+      cursor: default;
+    }
+
+    .button.primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .button.secondary {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .stats {
+      display: grid;
+      gap: 14px;
+    }
+
+    .stat-value {
+      font-size: 34px;
+      font-weight: 800;
+      margin: 8px 0 6px;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .mini {
+      background: #f7faff;
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .mini strong {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+
+    .patient-grid,
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .table {
+      margin-top: 16px;
+      overflow: hidden;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+
+    .table-row {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr 1fr;
+      gap: 14px;
+      padding: 15px 16px;
+      border-bottom: 1px solid #edf2fa;
+      font-size: 14px;
+    }
+
+    .table-row.header {
+      background: #f7faff;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 11px;
+      font-weight: 700;
+      color: #74839e;
+    }
+
+    .table-row:last-child {
+      border-bottom: none;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 1100px) {
+      .shell,
+      .content-grid,
+      .patient-grid,
+      .admin-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        padding: 14px;
+      }
+
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search {
+        max-width: none;
+      }
+
+      .med-item,
+      .table-row {
+        grid-template-columns: 1fr;
+      }
+
+      .mini-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <div class="eyebrow">MedMinder Preview</div>
+      <h1>Current Visual Direction</h1>
+      <p>
+        This is a static HTML preview of the current Sprint 1 design direction. It shows the shared
+        healthcare SaaS visual system and the rough layout style for the User App, Caregiver App,
+        and Admin App before full feature implementation.
+      </p>
+    </div>
+
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <div class="eyebrow">User App</div>
+          <h2>Mobile-first medication reminder inside a web app</h2>
+          <div class="sub">Large medication cards, soft alerts, adherence overview, and clean task-focused hierarchy.</div>
+        </div>
+      </div>
+
+      <div class="shell">
+        <aside class="sidebar">
+          <div class="brand">
+            <div class="brand-mark"></div>
+            <div>
+              <h3>MedMinder</h3>
+              <p>User Experience</p>
+            </div>
+          </div>
+
+          <div class="nav-item active">Dashboard</div>
+          <div class="nav-item">Medications</div>
+          <div class="nav-item">Schedules</div>
+          <div class="nav-item">Dose History</div>
+          <div class="nav-item">Refill Alerts</div>
+          <div class="nav-item">Caregiver Access</div>
+          <div class="promo">
+            <strong>Soft healthcare SaaS feel</strong>
+            <p>No dark mode, no noisy colors, and no cluttered school-project layout.</p>
+          </div>
+        </aside>
+
+        <div>
+          <div class="topbar">
+            <div class="search">Search medications, dose history, or alerts...</div>
+            <div class="top-actions">July 3, 2026 · Emily Johnson</div>
+          </div>
+
+          <div class="content-grid">
+            <div class="card">
+              <div class="eyebrow">Today's Focus</div>
+              <h3>Today's Medications</h3>
+              <p>Medication cards are large and readable so the main daily task is always clear.</p>
+
+              <div class="med-list">
+                <div class="med-item">
+                  <div class="med-time">08:00<span>AM</span></div>
+                  <div>
+                    <div class="med-name">Vitamin C 500mg</div>
+                    <p>1 tablet · morning supplement</p>
+                  </div>
+                  <div class="badge success">Taken</div>
+                </div>
+
+                <div class="med-item">
+                  <div class="med-time">01:00<span>PM</span></div>
+                  <div>
+                    <div class="med-name">Metformin 500mg</div>
+                    <p>1 tablet · after lunch</p>
+                  </div>
+                  <div class="badge warning">Pending</div>
+                </div>
+
+                <div class="med-item">
+                  <div class="med-time">08:00<span>PM</span></div>
+                  <div>
+                    <div class="med-name">Atorvastatin 10mg</div>
+                    <p>1 tablet · evening dose</p>
+                  </div>
+                  <div class="badge danger">Late</div>
+                </div>
+              </div>
+
+              <div class="button-row">
+                <button class="button primary">Log Dose</button>
+                <button class="button secondary">View Full Schedule</button>
+              </div>
+            </div>
+
+            <div class="stats">
+              <div class="card">
+                <div class="eyebrow">Adherence Snapshot</div>
+                <h3>This Month</h3>
+                <div class="stat-value">87%</div>
+                <p>47 taken doses out of 54 scheduled doses.</p>
+                <div class="mini-grid">
+                  <div class="mini"><strong>47</strong><span>Taken</span></div>
+                  <div class="mini"><strong>5</strong><span>Missed</span></div>
+                  <div class="mini"><strong>2</strong><span>Skipped</span></div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="eyebrow">Refill Alerts</div>
+                <h3>Low stock notices</h3>
+                <p>Visually noticeable, but still calm and trustworthy.</p>
+                <div class="stack">
+                  <div class="med-item">
+                    <div>
+                      <div class="med-name" style="font-size:18px;">Metformin</div>
+                      <p>Current: 4 tablets</p>
+                    </div>
+                    <div>
+                      <div class="badge danger">Low Stock</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="button-row">
+                  <button class="button primary">Add Refill</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <div class="eyebrow">Caregiver App</div>
+          <h2>Read-only patient overview</h2>
+          <div class="sub">Patient cards summarize pending doses, missed doses, and refill risk without edit actions.</div>
+        </div>
+      </div>
+
+      <div class="patient-grid">
+        <div class="card">
+          <h3>Emily Johnson</h3>
+          <p>Authorized caregiver view</p>
+          <div class="mini-grid">
+            <div class="mini"><strong>2</strong><span>Pending</span></div>
+            <div class="mini"><strong>1</strong><span>Missed</span></div>
+            <div class="mini"><strong>1</strong><span>Refill Alert</span></div>
+          </div>
+          <div class="button-row">
+            <button class="button secondary">View Details</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Daniel Lee</h3>
+          <p>Authorized caregiver view</p>
+          <div class="mini-grid">
+            <div class="mini"><strong>1</strong><span>Pending</span></div>
+            <div class="mini"><strong>0</strong><span>Missed</span></div>
+            <div class="mini"><strong>0</strong><span>Refill Alert</span></div>
+          </div>
+          <div class="button-row">
+            <button class="button secondary">View Details</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <div class="eyebrow">Admin App</div>
+          <h2>Clean healthcare SaaS dashboard</h2>
+          <div class="sub">System-level stats, search, filters, and styled data views instead of raw default tables.</div>
+        </div>
+      </div>
+
+      <div class="admin-grid">
+        <div class="card">
+          <div class="eyebrow">System Stats</div>
+          <h3>Admin Dashboard Tone</h3>
+          <div class="mini-grid">
+            <div class="mini"><strong>124</strong><span>Users</span></div>
+            <div class="mini"><strong>382</strong><span>Audit Events</span></div>
+            <div class="mini"><strong>12</strong><span>Reports</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="eyebrow">Audit Review</div>
+          <h3>Styled log table</h3>
+          <p>Admin sees system management data, not unrestricted private medication detail.</p>
+          <div class="table">
+            <div class="table-row header">
+              <div>Timestamp</div>
+              <div>Actor</div>
+              <div>Action</div>
+              <div>Target</div>
+            </div>
+            <div class="table-row">
+              <div>2026-07-03 08:03</div>
+              <div>Emily Johnson</div>
+              <div>LOG_DOSE</div>
+              <div>dose_logs</div>
+            </div>
+            <div class="table-row">
+              <div>2026-07-03 09:10</div>
+              <div>Emily Johnson</div>
+              <div>ADD_REFILL</div>
+              <div>refill_records</div>
+            </div>
+            <div class="table-row">
+              <div>2026-07-03 10:22</div>
+              <div>Admin User</div>
+              <div>UPDATE_ROLE</div>
+              <div>user_roles</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      Open this file directly in your browser to preview the current direction:
+      <strong>docs/medminder-preview.html</strong>.
+      This is a static mock preview only. The actual React preview and real pages will continue evolving from this visual system.
+    </div>
+  </div>
+</body>
+</html>
