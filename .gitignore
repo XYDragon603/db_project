@@ -1,0 +1,9 @@
+.env
+frontend/dist
+frontend/node_modules
+backend/target
+tmp/
+.vscode/
+*.log
+frontend/*.log
+backend/*.log

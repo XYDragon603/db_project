@@ -6,6 +6,8 @@ type Status =
   | "MISSED"
   | "SKIPPED"
   | "LATE"
+  | "ACTIVE"
+  | "INACTIVE"
   | "APPROVED"
   | "REVOKED";
 
@@ -15,6 +17,8 @@ const badgeStyles: Record<Status, string> = {
   MISSED: "bg-danger text-danger-foreground",
   SKIPPED: "bg-slate-100 text-slate-600",
   LATE: "bg-amber-100 text-amber-700",
+  ACTIVE: "bg-success text-success-foreground",
+  INACTIVE: "bg-slate-200 text-slate-700",
   APPROVED: "bg-success text-success-foreground",
   REVOKED: "bg-danger text-danger-foreground",
 };

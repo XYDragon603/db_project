@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type DataTableColumn<T> = {
@@ -6,7 +7,7 @@ type DataTableColumn<T> = {
   align?: "left" | "right";
 };
 
-export function DataTable<T extends Record<string, string | number>>({
+export function DataTable<T extends Record<string, ReactNode>>({
   columns,
   rows,
 }: {

@@ -1,0 +1,20 @@
+{
+  "name": "MedMinder",
+  "short_name": "MedMinder",
+  "description": "Medication reminder and care coordination web app.",
+  "theme_color": "#4f83e3",
+  "background_color": "#f5f9ff",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

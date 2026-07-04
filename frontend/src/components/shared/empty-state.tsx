@@ -1,12 +1,15 @@
+import type { ReactNode } from "react";
 import { Inbox } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export function EmptyState({
   title,
   description,
+  action,
 }: {
   title: string;
   description: string;
+  action?: ReactNode;
 }) {
   return (
     <Card className="flex flex-col items-center justify-center gap-3 py-10 text-center">
@@ -15,6 +18,7 @@ export function EmptyState({
       </div>
       <h3>{title}</h3>
       <p className="max-w-md">{description}</p>
+      {action ? <div className="pt-2">{action}</div> : null}
     </Card>
   );
 }

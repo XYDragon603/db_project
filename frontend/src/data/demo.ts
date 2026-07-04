@@ -25,8 +25,8 @@ export const medications: MedicationCardProps[] = [
 ];
 
 export const schedules = [
-  { time: "08:00 AM", frequency: "Daily", doseAmount: "1 tablet", active: true },
-  { time: "08:00 PM", frequency: "Daily", doseAmount: "1 tablet", active: true },
+  { time: "08:00 AM", meta: "DAILY - 1 tablet", active: true },
+  { time: "08:00 PM", meta: "DAILY - 1 tablet", active: true },
 ];
 
 export const refillAlerts = [

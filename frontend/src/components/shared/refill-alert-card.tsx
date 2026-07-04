@@ -6,10 +6,14 @@ export function RefillAlertCard({
   medication,
   currentQuantity,
   refillThreshold,
+  onAddRefill,
+  isSubmitting = false,
 }: {
   medication: string;
   currentQuantity: number;
   refillThreshold: number;
+  onAddRefill?: () => void;
+  isSubmitting?: boolean;
 }) {
   return (
     <Card className="space-y-4 border-danger/40 bg-gradient-to-br from-white to-rose-50">
@@ -19,10 +23,12 @@ export function RefillAlertCard({
         </div>
         <div>
           <h3>{medication}</h3>
-          <p>Current: {currentQuantity} tablets · Refill threshold: {refillThreshold}</p>
+          <p>Current: {currentQuantity} tablets - Refill threshold: {refillThreshold}</p>
         </div>
       </div>
-      <Button className="w-full">Add refill</Button>
+      <Button className="w-full" onClick={onAddRefill} disabled={!onAddRefill || isSubmitting}>
+        {isSubmitting ? "Saving..." : "Add refill"}
+      </Button>
     </Card>
   );
 }
