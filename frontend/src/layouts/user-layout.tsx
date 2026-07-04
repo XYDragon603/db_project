@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/shared/app-shell";
 import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
 import { Sidebar } from "@/components/shared/sidebar";
 import { Topbar } from "@/components/shared/topbar";
+import { useDemoAuth } from "@/hooks/use-demo-auth";
 import { formatTopbarDate } from "@/lib/date-display";
 
 export function UserLayout({
@@ -14,8 +15,15 @@ export function UserLayout({
   title: string;
 }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const auth = useDemoAuth();
   const path = location.pathname;
   const dateLabel = formatTopbarDate();
+
+  function handleLogout() {
+    auth.logout();
+    navigate("/login", { replace: true });
+  }
 
   const sidebarItems = [
     { label: "Dashboard", icon: "home" as const, href: "/user/dashboard", active: path === "/user/dashboard" },
@@ -46,7 +54,7 @@ export function UserLayout({
           items={sidebarItems}
         />
         <main className="min-w-0 flex-1 pb-24 xl:pb-0">
-          <Topbar title={title} dateLabel={dateLabel} />
+          <Topbar title={title} dateLabel={dateLabel} onLogout={handleLogout} />
           {children}
         </main>
       </div>

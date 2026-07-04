@@ -31,3 +31,13 @@ export function updateAuthSessionProfile(profile) {
   window.dispatchEvent(new CustomEvent(AUTH_SESSION_UPDATED_EVENT, { detail: nextSession }));
   return nextSession;
 }
+
+export function persistAuthSession(nextSession) {
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextSession));
+  window.dispatchEvent(new CustomEvent(AUTH_SESSION_UPDATED_EVENT, { detail: nextSession }));
+}
+
+export function clearAuthSession() {
+  window.localStorage.removeItem(STORAGE_KEY);
+  window.dispatchEvent(new CustomEvent(AUTH_SESSION_UPDATED_EVENT, { detail: null }));
+}

@@ -16,3 +16,7 @@ export declare function createAuthSession(
 export declare function updateAuthSessionProfile(
   profile: Partial<LoginResponse>,
 ): AuthSession | null;
+
+export declare function persistAuthSession(nextSession: AuthSession): void;
+
+export declare function clearAuthSession(): void;

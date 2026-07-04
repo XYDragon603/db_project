@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { LoginResponse } from "@/api/types";
-import { AUTH_SESSION_UPDATED_EVENT } from "@/api/auth-session";
+import { AUTH_SESSION_UPDATED_EVENT, clearAuthSession, persistAuthSession } from "@/api/auth-session";
 import type { AuthSession } from "@/api/auth-session";
 
 export const STORAGE_KEY = "medminder-auth-session";
@@ -16,9 +16,7 @@ export function useDemoAuth() {
   useEffect(() => {
     function handleSessionUpdated(event: Event) {
       const nextSession = (event as CustomEvent<AuthSession>).detail;
-      if (nextSession) {
-        setSession(nextSession);
-      }
+      setSession(nextSession ?? null);
     }
 
     window.addEventListener(AUTH_SESSION_UPDATED_EVENT, handleSessionUpdated as EventListener);
@@ -31,12 +29,10 @@ export function useDemoAuth() {
     user: session?.profile ?? null,
     session,
     login(nextSession: AuthSession) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextSession));
-      setSession(nextSession);
+      persistAuthSession(nextSession);
     },
     logout() {
-      window.localStorage.removeItem(STORAGE_KEY);
-      setSession(null);
+      clearAuthSession();
     },
   }), [session]);
 

@@ -1,12 +1,15 @@
 import { Bell, CalendarDays, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export function Topbar({
   title,
   dateLabel,
+  onLogout,
 }: {
   title: string;
   dateLabel: string;
+  onLogout?: () => void;
 }) {
   return (
     <div className="glass-panel mb-6 flex flex-col gap-4 p-4 md:p-5 xl:flex-row xl:items-center xl:justify-between">
@@ -26,6 +29,11 @@ export function Topbar({
             <CalendarDays className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-slate-700">{dateLabel}</span>
           </div>
+          {onLogout ? (
+            <Button variant="secondary" className="h-12 px-5" onClick={onLogout}>
+              Sign out
+            </Button>
+          ) : null}
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-white text-slate-600">
             <Bell className="h-4 w-4" />
           </div>
