@@ -1,148 +1,149 @@
 # MedMinder
 
-MedMinder is a full-stack medication schedule and refill tracking project built with Spring Boot, React, and PostgreSQL.
+MedMinder is a full-stack medication reminder and tracking web application built for educational demonstration as part of a software engineering and database project.
 
-## Prerequisites
+It helps users manage medications, create daily schedules, log doses, monitor refill alerts, review medication history, and view monthly adherence reports. The platform also includes a read-only caregiver view and admin tools for audit monitoring and user account management.
 
-- Java 21
-- Maven 3.9+
-- Node.js 24+
-- PostgreSQL 15+
+MedMinder is designed for personal medication tracking and student project demonstration only. It is not intended for clinical decision-making or professional medical use.
 
-## Required Environment Variables
+## Features
 
-Copy `.env.example` and fill in safe local or deployment values.
+### User App
+- User registration and login
+- Medication dashboard with today’s scheduled doses
+- Add, edit, and deactivate medications
+- Daily schedule management
+- Dose logging with statuses:
+  - `TAKEN`
+  - `MISSED`
+  - `SKIPPED`
+  - `LATE`
+- Refill alert tracking
+- Dose history
+- Monthly adherence reports
+- Profile and settings update
+- Caregiver access management
+- Sign out
 
-Backend:
+### Caregiver App
+- Read-only caregiver dashboard
+- Approved patient access only
+- Patient medication overview
+- Missed dose and refill visibility
 
-- `SPRING_DATASOURCE_URL`
-- `SPRING_DATASOURCE_USERNAME`
-- `SPRING_DATASOURCE_PASSWORD`
-- `DB_INIT_MODE`
-- `FRONTEND_ORIGIN`
+### Admin App
+- Admin audit logs
+- User management
+- Activate and deactivate user accounts
+- Basic role management support
+- System activity tracking through audit logs
 
-Frontend:
+## Tech Stack
 
-- `VITE_API_BASE_URL`
-- `VITE_ENABLE_MOCK_FALLBACK`
+### Frontend
+- React
+- Vite
+- TypeScript
+- Tailwind CSS
+- Responsive healthcare SaaS-style UI
+- Reusable component system
 
-## Database Setup
+### Backend
+- Spring Boot
+- Spring Security
+- Spring Data JPA
+- Hibernate ORM
+- REST API architecture
+- Role-based access control
 
-Run the SQL files in this order:
+### Database
+- PostgreSQL
+- Normalized relational schema
+- Constraints and indexes
+- Seed data for demo use
 
-1. `database/schema.sql`
-2. `database/indexes.sql`
-3. `database/seed.sql`
-4. `database/fix-sequences.sql` if you already loaded seed data into an existing Render database and generated IDs are out of sync
+## Architecture
 
-For local initialization through Spring Boot:
+MedMinder follows a standard full-stack layered architecture:
 
-```bash
-DB_INIT_MODE=always
-```
+- `frontend/` contains the React client application
+- `backend/` contains the Spring Boot server
+- `database/` contains schema, seed, index, and helper SQL scripts
+- `.github/workflows/` contains CI and security scan workflows
 
-For Render PostgreSQL:
+The backend is organized into:
+- controllers
+- services
+- repositories
+- entities
+- security configuration
+- audit logging
 
-- keep `DB_INIT_MODE=never`
-- run the SQL files directly against the Render database
-- set `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and `SPRING_DATASOURCE_PASSWORD`
+The frontend uses:
+- shared layouts
+- centralized API client
+- role-based routing
+- reusable UI components for cards, forms, tables, and states
 
-The backend also accepts a Render-style `postgresql://...` URL in `SPRING_DATASOURCE_URL`.
+## Core Business Rules
 
-## Run the Backend
+- `PENDING` is a derived display status only and is not stored in `dose_logs`
+- `dose_logs.status` only stores:
+  - `TAKEN`
+  - `MISSED`
+  - `SKIPPED`
+  - `LATE`
+- Soft deactivation is preferred over hard deletion for important records
+- Users can only access their own medication data
+- Caregivers can only view approved patient records
+- Admin users focus on system management, audit review, and account control
 
-```bash
-cd backend
-mvn spring-boot:run
-```
+## Deployment
 
-Default backend URL:
+MedMinder is deployment-ready with:
+- Frontend on Vercel
+- Backend on Render
+- PostgreSQL on Render
 
-```text
-http://localhost:8080
-```
+Environment-based configuration is supported for:
+- frontend API base URL
+- backend datasource settings
+- CORS origin
+- demo mock fallback control
 
-Health check:
+## Demo Flow
 
-```text
-GET http://localhost:8080/actuator/health
-```
-
-## Run the Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Default frontend URL:
-
-```text
-http://localhost:5173
-```
-
-If PowerShell blocks `npm.ps1`, run the command through `cmd` instead:
-
-```bash
-cmd /c "npm run --prefix frontend dev"
-```
+A typical demo flow includes:
+1. Register a new user
+2. Sign in
+3. Add a medication
+4. Create a daily schedule
+5. Log a dose
+6. View refill alerts
+7. View dose history
+8. Review adherence reports
+9. Update profile
+10. Sign out
 
 ## Demo Accounts
+
+Seeded demo accounts:
 
 - User: `emily@example.com`
 - Caregiver: `alex.caregiver@example.com`
 - Admin: `admin@example.com`
 - Password: `password`
 
-## Build and Test Commands
+## Project Note
 
-Frontend:
+This project was built to align with both:
+- a software system construction course requirement
+- a database design and implementation course requirement
 
-```bash
-npm run --prefix frontend check
-npm run --prefix frontend build
-```
-
-Backend:
-
-```bash
-mvn test -f backend/pom.xml
-```
-
-## Render Deployment
-
-This repository includes a root-level [`render.yaml`](render.yaml) Blueprint.
-
-Recommended deploy order:
-
-1. Push the repository to GitHub.
-2. In Render, create services from `render.yaml` or connect the repo manually.
-3. In the Render PostgreSQL database, run:
-   - `database/schema.sql`
-   - `database/indexes.sql`
-   - `database/seed.sql`
-   - `database/fix-sequences.sql` if needed
-4. Set the prompted Blueprint values:
-   - `FRONTEND_ORIGIN`
-   - `VITE_API_BASE_URL`
-5. Keep:
-   - `DB_INIT_MODE=never`
-   - `VITE_ENABLE_MOCK_FALLBACK=false`
-
-Expected deployed values:
-
-- `FRONTEND_ORIGIN=https://<your-frontend>.onrender.com`
-- `VITE_API_BASE_URL=https://<your-backend>.onrender.com/api`
-
-The Blueprint also includes a rewrite rule so React routes like `/admin/roles` and `/user/reports` work correctly on a static site refresh.
-
-## Final Checks
-
-Before submission or deployment:
-
-```bash
-npm run --prefix frontend check
-npm run --prefix frontend build
-mvn test -f backend/pom.xml
-```
+It emphasizes:
+- full-stack integration
+- relational database design
+- access control
+- auditability
+- deployment readiness
+- clean, responsive UI design
