@@ -1,4 +1,4 @@
-﻿package com.medminder.web;
+package com.medminder.web;
 
 import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
