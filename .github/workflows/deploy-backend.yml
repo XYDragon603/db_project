@@ -42,4 +42,4 @@ jobs:
 
       - name: Restart backend
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "sudo /usr/bin/systemctl restart medminder-backend && sudo /usr/bin/systemctl status medminder-backend --no-pager"
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "whoami && sudo -n /usr/bin/systemctl restart medminder-backend && sudo -n /usr/bin/systemctl status medminder-backend --no-pager"
