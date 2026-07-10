@@ -9,3 +9,8 @@ frontend/*.log
 backend/*.log
 
 ssc-y25t3-project-sudo-give_me_an_a/
+*.tsbuildinfo
+hs_err_pid*.log
+replay_pid*.log
+.github/modernize/
+backend/.github/modernize/
