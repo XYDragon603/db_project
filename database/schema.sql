@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS user_roles (
 );
 
 CREATE TABLE IF NOT EXISTS countries (
-    country_code CHAR(2) PRIMARY KEY,
+    country_code VARCHAR(2) PRIMARY KEY,
     country_name VARCHAR(100) NOT NULL UNIQUE,
     regulatory_authority VARCHAR(150) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS countries (
 
 CREATE TABLE IF NOT EXISTS medication_catalog (
     catalog_id BIGSERIAL PRIMARY KEY,
-    country_code CHAR(2) NOT NULL REFERENCES countries(country_code),
+    country_code VARCHAR(2) NOT NULL REFERENCES countries(country_code),
     generic_name VARCHAR(150) NOT NULL,
     dosage_form VARCHAR(50) NOT NULL,
     strength VARCHAR(100) NOT NULL,

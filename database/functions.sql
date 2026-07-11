@@ -95,7 +95,7 @@ AS $$
     ORDER BY is_active DESC, medicine_name;
 $$;
 
-CREATE OR REPLACE FUNCTION getMedicationCatalog(p_country_code CHAR(2))
+CREATE OR REPLACE FUNCTION getMedicationCatalog(p_country_code VARCHAR(2))
 RETURNS TABLE (
     catalog_id BIGINT,
     generic_name VARCHAR,

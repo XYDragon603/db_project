@@ -48,7 +48,7 @@ erDiagram
     }
 
     countries {
-        char country_code PK
+        varchar country_code PK
         varchar country_name UK
         varchar regulatory_authority
         boolean is_active
@@ -56,7 +56,7 @@ erDiagram
 
     medication_catalog {
         bigint catalog_id PK
-        char country_code FK
+        varchar country_code FK
         varchar generic_name
         varchar dosage_form
         varchar strength
