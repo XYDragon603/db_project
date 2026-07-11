@@ -10,6 +10,7 @@ import com.medminder.domain.repository.UserRepository;
 import com.medminder.web.DisplayTimeFormatter;
 import com.medminder.web.dto.CreateScheduleRequest;
 import com.medminder.web.dto.ScheduleResponse;
+import com.medminder.web.dto.UpdateScheduleRequest;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -107,6 +108,33 @@ public class ScheduleService {
         auditLog.setTargetTable("medication_schedules");
         auditLog.setTargetId(saved.getScheduleId());
         auditLog.setDetails("Deactivated schedule at " + DisplayTimeFormatter.format(saved.getScheduledTime()));
+        auditLogRepository.save(auditLog);
+
+        return new ScheduleResponse(
+            saved.getScheduleId(),
+            DisplayTimeFormatter.format(saved.getScheduledTime()),
+            saved.getDoseAmount().stripTrailingZeros().toPlainString(),
+            saved.getFrequency().name(),
+            saved.isActive()
+        );
+    }
+
+    @Transactional
+    public ScheduleResponse updateSchedule(Long userId, Long scheduleId, UpdateScheduleRequest request) {
+        var schedule = requireOwnedSchedule(userId, scheduleId);
+        schedule.setScheduledTime(LocalTime.parse(request.scheduledTime()));
+        schedule.setDoseAmount(new BigDecimal(request.doseAmount()));
+        var saved = medicationScheduleRepository.save(schedule);
+
+        var auditLog = new AuditLog();
+        auditLog.setUser(saved.getUser());
+        auditLog.setAction("UPDATE_SCHEDULE");
+        auditLog.setTargetTable("medication_schedules");
+        auditLog.setTargetId(saved.getScheduleId());
+        auditLog.setDetails(
+            "Updated daily reminder to " + DisplayTimeFormatter.format(saved.getScheduledTime())
+                + ", dose amount " + saved.getDoseAmount().stripTrailingZeros().toPlainString()
+        );
         auditLogRepository.save(auditLog);
 
         return new ScheduleResponse(

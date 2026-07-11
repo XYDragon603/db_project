@@ -7,11 +7,17 @@ export function ScheduleCard({
   meta,
   active,
   action,
+  secondaryAction,
 }: {
   time: string;
   meta: string;
   active: boolean;
   action?: {
+    label: string;
+    onClick: () => void;
+    disabled?: boolean;
+  };
+  secondaryAction?: {
     label: string;
     onClick: () => void;
     disabled?: boolean;
@@ -25,6 +31,11 @@ export function ScheduleCard({
       </div>
       <div className="flex items-center gap-3">
         <StatusBadge status={active ? "ACTIVE" : "INACTIVE"} />
+        {secondaryAction ? (
+          <Button variant="secondary" disabled={secondaryAction.disabled} onClick={secondaryAction.onClick}>
+            {secondaryAction.label}
+          </Button>
+        ) : null}
         {action ? (
           <Button variant="danger" disabled={action.disabled} onClick={action.onClick}>
             {action.label}

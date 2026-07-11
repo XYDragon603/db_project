@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { createSchedules, deactivateSchedule, getMedications, getSchedules } from "@/api/client";
+import { createSchedules, deactivateSchedule, getMedications, getSchedules, updateSchedule } from "@/api/client";
 import type { LoginResponse, Medication, Schedule } from "@/api/types";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FeedbackMessage } from "@/components/shared/feedback-message";
@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { ScheduleCard } from "@/components/shared/schedule-card";
 import { SectionCard } from "@/components/shared/section-card";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import {
   formatDoseAmountLabel,
   getScheduleMeta,
@@ -45,6 +46,10 @@ export function ScheduleManagementPage({ user }: { user: LoginResponse }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeletingScheduleId, setIsDeletingScheduleId] = useState<number | null>(null);
+  const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
+  const [editTime, setEditTime] = useState("");
+  const [editDoseAmount, setEditDoseAmount] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
   const [dailyDoseCount, setDailyDoseCount] = useState(1);
   const [reminderTimes, setReminderTimes] = useState<ReminderTime[]>([DEFAULT_REMINDER_TIMES[0]]);
   const [error, setError] = useState<string | null>(null);
@@ -225,6 +230,67 @@ export function ScheduleManagementPage({ user }: { user: LoginResponse }) {
     }
   }
 
+  function openEditDialog(schedule: Schedule) {
+    setEditingSchedule(schedule);
+    setEditTime(schedule.scheduledTime);
+    setEditDoseAmount(schedule.doseAmount);
+    setError(null);
+    setMessage(null);
+  }
+
+  function closeEditDialog() {
+    if (!isUpdating) {
+      setEditingSchedule(null);
+    }
+  }
+
+  async function handleUpdateSchedule(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingSchedule) {
+      return;
+    }
+    if (!editTime) {
+      setError("Choose an exact reminder time.");
+      return;
+    }
+    if (!editDoseAmount || Number(editDoseAmount) <= 0) {
+      setError("Dose amount must be greater than zero.");
+      return;
+    }
+    const duplicate = schedules.some((schedule) => (
+      schedule.active
+      && schedule.scheduleId !== editingSchedule.scheduleId
+      && schedule.scheduledTime === editTime
+    ));
+    if (duplicate) {
+      setError(`An active reminder already exists at ${editTime}.`);
+      return;
+    }
+
+    setIsUpdating(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const updated = await updateSchedule(user.userId, editingSchedule.scheduleId, {
+        scheduledTime: editTime,
+        doseAmount: editDoseAmount,
+      });
+      setSchedules((current) => current
+        .map((schedule) => schedule.scheduleId === updated.scheduleId ? updated : schedule)
+        .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime)));
+      setEditingSchedule(null);
+      setMessage(`Daily reminder updated to ${updated.scheduledTime}.`);
+    } catch (nextError) {
+      if (nextError instanceof Error && nextError.message.includes("403")) {
+        setError("You can only update schedules from your own account.");
+      } else {
+        setError("Unable to update this schedule right now.");
+      }
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
   return (
     <UserLayout title="Schedule Management">
       <PageHeader
@@ -283,6 +349,11 @@ export function ScheduleManagementPage({ user }: { user: LoginResponse }) {
                     formatDoseAmountLabel(schedule.doseAmount),
                   )}
                   active={schedule.active}
+                  secondaryAction={{
+                    label: "Edit",
+                    onClick: () => openEditDialog(schedule),
+                    disabled: isDeletingScheduleId !== null,
+                  }}
                   action={{
                     label: isDeletingScheduleId === schedule.scheduleId ? "Removing..." : "Delete",
                     onClick: () => void handleDeactivateSchedule(schedule),
@@ -372,6 +443,48 @@ export function ScheduleManagementPage({ user }: { user: LoginResponse }) {
           )}
         </SectionCard>
       </div>
+      <Dialog
+        open={editingSchedule !== null}
+        title="Edit daily reminder"
+        description="Adjust the exact reminder time or dose amount. The medication and daily frequency stay unchanged."
+        onClose={closeEditDialog}
+      >
+        <form className="space-y-5" onSubmit={handleUpdateSchedule}>
+          <label className="space-y-2">
+            <span className="text-sm font-medium text-slate-700">Exact reminder time</span>
+            <input
+              className="flex h-12 w-full rounded-2xl border border-border bg-white px-4 text-sm"
+              type="time"
+              value={editTime}
+              onChange={(event) => setEditTime(event.target.value)}
+              required
+            />
+          </label>
+          <FormInput
+            label="Dose amount"
+            name="editDoseAmount"
+            placeholder="1"
+            type="number"
+            min="0.01"
+            step="0.01"
+            value={editDoseAmount}
+            onChange={(event) => setEditDoseAmount(event.target.value)}
+            required
+          />
+          <div className="flex items-center justify-between rounded-2xl bg-blue-50 px-4 py-3 text-sm">
+            <span className="font-medium text-slate-700">Repeats</span>
+            <span className="font-semibold text-primary">Every day</span>
+          </div>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Button variant="secondary" onClick={closeEditDialog} disabled={isUpdating}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isUpdating}>
+              {isUpdating ? "Saving changes..." : "Save changes"}
+            </Button>
+          </div>
+        </form>
+      </Dialog>
     </UserLayout>
   );
 }

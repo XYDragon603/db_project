@@ -5,6 +5,7 @@ import com.medminder.service.schedule.ScheduleService;
 import com.medminder.web.dto.CreateScheduleRequest;
 import com.medminder.web.dto.CreateSchedulesRequest;
 import com.medminder.web.dto.ScheduleResponse;
+import com.medminder.web.dto.UpdateScheduleRequest;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import java.util.List;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 @RequestMapping("/api")
@@ -79,5 +81,19 @@ public class ScheduleController {
             accessScopeService.requireSelfAccess(principal.getName(), userId);
         }
         return scheduleService.deactivateSchedule(authenticatedUserId, scheduleId);
+    }
+
+    @PutMapping("/schedules/{scheduleId}")
+    public ScheduleResponse updateSchedule(
+        @RequestParam(required = false) Long userId,
+        @PathVariable Long scheduleId,
+        @Valid @RequestBody UpdateScheduleRequest request,
+        Principal principal
+    ) {
+        var authenticatedUserId = accessScopeService.resolveSelfUserId(principal.getName());
+        if (userId != null) {
+            accessScopeService.requireSelfAccess(principal.getName(), userId);
+        }
+        return scheduleService.updateSchedule(authenticatedUserId, scheduleId, request);
     }
 }

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import com.medminder.service.schedule.ScheduleService;
 import com.medminder.web.dto.CreateScheduleRequest;
+import com.medminder.web.dto.UpdateScheduleRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -105,6 +106,39 @@ class ScheduleServiceTests {
         assertEquals(2, responses.size());
         assertEquals("08:00", responses.get(0).scheduledTime());
         assertEquals("22:00", responses.get(1).scheduledTime());
+    }
+
+    @Test
+    void updatesOwnedScheduleAndWritesAuditLog() {
+        var user = buildUser(1L);
+        var schedule = buildSchedule(101L, user, buildMedication(10L, user));
+        when(medicationScheduleRepository.findById(101L)).thenReturn(Optional.of(schedule));
+        doAnswer(invocation -> invocation.getArgument(0)).when(medicationScheduleRepository).save(any(MedicationSchedule.class));
+
+        var response = scheduleService.updateSchedule(
+            1L,
+            101L,
+            new UpdateScheduleRequest("21:30", "1.5")
+        );
+
+        assertEquals("21:30", response.scheduledTime());
+        assertEquals("1.5", response.doseAmount());
+        ArgumentCaptor<AuditLog> auditCaptor = ArgumentCaptor.forClass(AuditLog.class);
+        verify(auditLogRepository).save(auditCaptor.capture());
+        assertEquals("UPDATE_SCHEDULE", auditCaptor.getValue().getAction());
+        assertEquals(101L, auditCaptor.getValue().getTargetId());
+    }
+
+    @Test
+    void rejectsUpdatingScheduleOwnedByAnotherUser() {
+        var owner = buildUser(2L);
+        var schedule = buildSchedule(101L, owner, buildMedication(10L, owner));
+        when(medicationScheduleRepository.findById(101L)).thenReturn(Optional.of(schedule));
+
+        assertThrows(
+            ResponseStatusException.class,
+            () -> scheduleService.updateSchedule(1L, 101L, new UpdateScheduleRequest("09:00", "1"))
+        );
     }
 
     private static User buildUser(Long userId) {

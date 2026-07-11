@@ -8,6 +8,7 @@ interface DialogProps {
   description?: string;
   children: ReactNode;
   className?: string;
+  onClose?: () => void;
 }
 
 export function Dialog({
@@ -16,27 +17,32 @@ export function Dialog({
   description,
   children,
   className,
+  onClose,
 }: DialogProps) {
   if (!open) {
     return null;
   }
 
   return (
-    <div className="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/20 p-4 xl:flex">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/30 p-4" role="presentation" onMouseDown={onClose}>
       <div
         className={cn(
-          "w-full max-w-lg rounded-[2rem] border border-white/80 bg-white p-6 shadow-float",
+          "max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[2rem] border border-white/80 bg-white p-6 shadow-float",
           className,
         )}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dialog-title"
+        onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
-            <h3>{title}</h3>
+            <h3 id="dialog-title">{title}</h3>
             {description ? <p className="mt-1">{description}</p> : null}
           </div>
-          <span className="rounded-full bg-slate-100 p-2 text-slate-500">
+          <button aria-label="Close dialog" className="rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200" onClick={onClose} type="button">
             <X className="h-4 w-4" />
-          </span>
+          </button>
         </div>
         {children}
       </div>

@@ -202,6 +202,18 @@ export function deactivateSchedule(userId: number, scheduleId: number) {
   });
 }
 
+export function updateSchedule(
+  userId: number,
+  scheduleId: number,
+  payload: { scheduledTime: string; doseAmount: string },
+) {
+  void userId;
+  return request<Schedule>(`/schedules/${scheduleId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
 export function logDose(userId: number, payload: Record<string, unknown>) {
   void userId;
   return request("/dose-logs", {
