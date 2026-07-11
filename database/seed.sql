@@ -34,6 +34,42 @@ INSERT INTO user_roles (user_role_id, user_id, role_id) VALUES
     (10, 10, 1)
 ON CONFLICT (user_id, role_id) DO NOTHING;
 
+INSERT INTO countries (country_code, country_name, regulatory_authority) VALUES
+    ('TH', 'Thailand', 'Thai Food and Drug Administration'),
+    ('CN', 'China', 'National Medical Products Administration'),
+    ('US', 'United States', 'U.S. Food and Drug Administration')
+ON CONFLICT (country_code) DO NOTHING;
+
+INSERT INTO medication_catalog (
+    catalog_id, country_code, generic_name, dosage_form, strength, prescription_required
+) VALUES
+    (1, 'TH', 'Metformin', 'Tablet', '500mg', TRUE),
+    (2, 'TH', 'Paracetamol', 'Tablet', '500mg', FALSE),
+    (3, 'TH', 'Amlodipine', 'Tablet', '5mg', TRUE),
+    (4, 'CN', 'Metformin', 'Tablet', '500mg', TRUE),
+    (5, 'CN', 'Atorvastatin', 'Tablet', '10mg', TRUE),
+    (6, 'CN', 'Vitamin C', 'Tablet', '500mg', FALSE),
+    (7, 'US', 'Metformin', 'Tablet', '500mg', TRUE),
+    (8, 'US', 'Atorvastatin', 'Tablet', '10mg', TRUE),
+    (9, 'US', 'Lisinopril', 'Tablet', '5mg', TRUE),
+    (10, 'US', 'Ibuprofen', 'Tablet', '200mg', FALSE)
+ON CONFLICT (country_code, generic_name, dosage_form, strength) DO NOTHING;
+
+INSERT INTO medication_brands (
+    brand_id, catalog_id, brand_name, manufacturer, local_registration_code
+) VALUES
+    (1, 1, 'Metformin GPO', 'Government Pharmaceutical Organization', 'TH-DEMO-001'),
+    (2, 2, 'Sara', 'Thai Nakorn Patana', 'TH-DEMO-002'),
+    (3, 3, 'Amlopine', 'Berlin Pharmaceutical', 'TH-DEMO-003'),
+    (4, 4, 'Metformin Demo CN', 'Demo Manufacturer CN', 'CN-DEMO-001'),
+    (5, 5, 'Atorvastatin Demo CN', 'Demo Manufacturer CN', 'CN-DEMO-002'),
+    (6, 6, 'Vitamin C Demo CN', 'Demo Manufacturer CN', 'CN-DEMO-003'),
+    (7, 7, 'Glucophage', 'Demo Manufacturer US', 'US-DEMO-001'),
+    (8, 8, 'Lipitor', 'Demo Manufacturer US', 'US-DEMO-002'),
+    (9, 9, 'Zestril', 'Demo Manufacturer US', 'US-DEMO-003'),
+    (10, 10, 'Advil', 'Demo Manufacturer US', 'US-DEMO-004')
+ON CONFLICT (catalog_id, brand_name) DO NOTHING;
+
 INSERT INTO medications (
     medication_id, user_id, medicine_name, dosage, form, current_quantity, refill_threshold, is_active, start_date, end_date, notes
 ) VALUES
@@ -141,3 +177,5 @@ SELECT setval(pg_get_serial_sequence('dose_logs', 'dose_log_id'), COALESCE((SELE
 SELECT setval(pg_get_serial_sequence('refill_records', 'refill_id'), COALESCE((SELECT MAX(refill_id) FROM refill_records), 1), true);
 SELECT setval(pg_get_serial_sequence('caregiver_access', 'access_id'), COALESCE((SELECT MAX(access_id) FROM caregiver_access), 1), true);
 SELECT setval(pg_get_serial_sequence('audit_logs', 'audit_id'), COALESCE((SELECT MAX(audit_id) FROM audit_logs), 1), true);
+SELECT setval(pg_get_serial_sequence('medication_catalog', 'catalog_id'), COALESCE((SELECT MAX(catalog_id) FROM medication_catalog), 1), true);
+SELECT setval(pg_get_serial_sequence('medication_brands', 'brand_id'), COALESCE((SELECT MAX(brand_id) FROM medication_brands), 1), true);

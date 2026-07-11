@@ -26,6 +26,8 @@ import type {
   RefillAlert,
   RefillRecordResponse,
   Schedule,
+  CatalogCountry,
+  MedicationCatalogItem,
   UserProfile,
 } from "@/api/types";
 import { STORAGE_KEY } from "@/hooks/use-demo-auth";
@@ -123,6 +125,16 @@ export function createMedication(userId: number, payload: Record<string, unknown
     endDate: String(payload.endDate ?? "") || null,
     notes: String(payload.notes ?? "") || null,
   });
+}
+
+export function getCatalogCountries() {
+  return request<CatalogCountry[]>("/medication-catalog/countries");
+}
+
+export function getMedicationCatalog(countryCode: string) {
+  return request<MedicationCatalogItem[]>(
+    `/medication-catalog?countryCode=${encodeURIComponent(countryCode)}`,
+  );
 }
 
 export function getMedicationById(userId: number, medicationId: number) {

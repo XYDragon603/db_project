@@ -1,5 +1,16 @@
 # MedMinder Database Design
 
+## Localized Medication Catalog
+
+The optional catalog is normalized into countries, medication_catalog, and
+medication_brands. A user medication may reference medication_catalog through
+nullable medications.catalog_id; manual medication entry remains valid when no
+local catalog match exists. Brand names remain copied into medicine_name so a
+historical user record stays readable if a catalog brand is later deactivated.
+
+Catalog entries support identification only. They do not provide medical advice,
+clinical validation, or a claim of real-time government registry verification.
+
 ## Overview
 
 MedMinder uses a normalized PostgreSQL schema to support medication tracking, schedule management, dose logging, refill reminders, caregiver access, and audit monitoring.

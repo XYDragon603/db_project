@@ -24,6 +24,10 @@ public class Medication {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "catalog_id")
+    private MedicationCatalog catalog;
+
     @Column(name = "medicine_name", nullable = false, length = 150)
     private String medicineName;
 
@@ -61,6 +65,8 @@ public class Medication {
     public void setMedicationId(Long medicationId) { this.medicationId = medicationId; }
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
+    public MedicationCatalog getCatalog() { return catalog; }
+    public void setCatalog(MedicationCatalog catalog) { this.catalog = catalog; }
     public String getMedicineName() { return medicineName; }
     public void setMedicineName(String medicineName) { this.medicineName = medicineName; }
     public String getDosage() { return dosage; }

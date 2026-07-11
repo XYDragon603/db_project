@@ -140,3 +140,26 @@ export interface RefillRecordResponse {
   quantityAdded: number;
   updatedQuantity: number;
 }
+
+export interface CatalogCountry {
+  countryCode: string;
+  countryName: string;
+  regulatoryAuthority: string;
+}
+
+export interface MedicationCatalogBrand {
+  brandId: number;
+  brandName: string;
+  manufacturer: string | null;
+  localRegistrationCode: string | null;
+}
+
+export interface MedicationCatalogItem {
+  catalogId: number;
+  countryCode: string;
+  genericName: string;
+  dosageForm: string;
+  strength: string;
+  prescriptionRequired: boolean;
+  brands: MedicationCatalogBrand[];
+}

@@ -7,6 +7,12 @@ CREATE INDEX IF NOT EXISTS idx_medication_schedules_user
 CREATE INDEX IF NOT EXISTS idx_medications_user
     ON medications(user_id);
 
+CREATE INDEX IF NOT EXISTS idx_catalog_country_generic
+    ON medication_catalog(country_code, lower(generic_name));
+
+CREATE INDEX IF NOT EXISTS idx_medication_brands_catalog
+    ON medication_brands(catalog_id);
+
 CREATE INDEX IF NOT EXISTS idx_caregiver_access_caregiver_status
     ON caregiver_access(caregiver_id, access_status);
 

@@ -95,12 +95,44 @@ AS $$
     ORDER BY is_active DESC, medicine_name;
 $$;
 
+CREATE OR REPLACE FUNCTION getMedicationCatalog(p_country_code CHAR(2))
+RETURNS TABLE (
+    catalog_id BIGINT,
+    generic_name VARCHAR,
+    dosage_form VARCHAR,
+    strength VARCHAR,
+    prescription_required BOOLEAN,
+    brand_id BIGINT,
+    brand_name VARCHAR,
+    manufacturer VARCHAR,
+    local_registration_code VARCHAR
+)
+LANGUAGE sql
+AS $$
+    SELECT mc.catalog_id,
+           mc.generic_name,
+           mc.dosage_form,
+           mc.strength,
+           mc.prescription_required,
+           mb.brand_id,
+           mb.brand_name,
+           mb.manufacturer,
+           mb.local_registration_code
+    FROM medication_catalog mc
+    LEFT JOIN medication_brands mb
+      ON mb.catalog_id = mc.catalog_id
+     AND mb.is_active = TRUE
+    WHERE mc.country_code = upper(p_country_code)
+      AND mc.catalog_status = 'ACTIVE'
+    ORDER BY mc.generic_name, mb.brand_name;
+$$;
+
 -- Representative insert used by Add Medication.
 INSERT INTO medications (
-    user_id, medicine_name, dosage, form, current_quantity,
+    user_id, catalog_id, medicine_name, dosage, form, current_quantity,
     refill_threshold, is_active, start_date, end_date, notes
 ) VALUES (
-    :user_id, :medicine_name, :dosage, :form, :current_quantity,
+    :user_id, :catalog_id, :medicine_name, :dosage, :form, :current_quantity,
     :refill_threshold, TRUE, :start_date, :end_date, :notes
 );
 

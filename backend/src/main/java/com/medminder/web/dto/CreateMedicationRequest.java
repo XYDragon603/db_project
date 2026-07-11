@@ -11,6 +11,7 @@ public record CreateMedicationRequest(
     @Min(0) int refillThreshold,
     String startDate,
     String endDate,
-    String notes
+    String notes,
+    Long catalogId
 ) {
 }

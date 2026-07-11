@@ -10,9 +10,11 @@ import static org.mockito.Mockito.when;
 
 import com.medminder.domain.entity.AuditLog;
 import com.medminder.domain.entity.Medication;
+import com.medminder.domain.entity.MedicationCatalog;
 import com.medminder.domain.entity.User;
 import com.medminder.domain.repository.AuditLogRepository;
 import com.medminder.domain.repository.MedicationRepository;
+import com.medminder.domain.repository.MedicationCatalogRepository;
 import com.medminder.domain.repository.UserRepository;
 import com.medminder.web.dto.CreateMedicationRequest;
 import java.time.LocalDate;
@@ -29,13 +31,15 @@ class MedicationServiceTests {
     private UserRepository userRepository;
     private AuditLogRepository auditLogRepository;
     private MedicationService medicationService;
+    private MedicationCatalogRepository catalogRepository;
 
     @BeforeEach
     void setUp() {
         medicationRepository = Mockito.mock(MedicationRepository.class);
         userRepository = Mockito.mock(UserRepository.class);
         auditLogRepository = Mockito.mock(AuditLogRepository.class);
-        medicationService = new MedicationService(medicationRepository, userRepository, auditLogRepository);
+        catalogRepository = Mockito.mock(MedicationCatalogRepository.class);
+        medicationService = new MedicationService(medicationRepository, userRepository, auditLogRepository, catalogRepository);
     }
 
     @Test
@@ -50,7 +54,8 @@ class MedicationServiceTests {
             6,
             "2026-07-01",
             "2026-12-31",
-            "Updated note"
+            "Updated note",
+            null
         );
 
         when(medicationRepository.findById(101L)).thenReturn(Optional.of(medication));
@@ -83,7 +88,8 @@ class MedicationServiceTests {
             5,
             "2026-07-01",
             null,
-            "Note"
+            "Note",
+            null
         );
 
         when(medicationRepository.findById(101L)).thenReturn(Optional.of(medication));
@@ -122,6 +128,29 @@ class MedicationServiceTests {
         when(userRepository.findById(1L)).thenReturn(Optional.of(buildUser(1L)));
 
         assertThrows(ResponseStatusException.class, () -> medicationService.deactivateMedication(1L, 101L));
+    }
+
+    @Test
+    void createsMedicationWithOptionalCatalogReference() {
+        var user = buildUser(1L);
+        var catalog = new MedicationCatalog();
+        catalog.setCatalogId(7L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(catalogRepository.findById(7L)).thenReturn(Optional.of(catalog));
+        doAnswer(invocation -> {
+            var medication = invocation.getArgument(0, Medication.class);
+            medication.setMedicationId(111L);
+            return medication;
+        }).when(medicationRepository).save(any(Medication.class));
+
+        medicationService.createMedication(1L, new CreateMedicationRequest(
+            "Glucophage", "500mg", "Tablet", 30, 5,
+            "2026-07-11", null, "Catalog-selected medication", 7L
+        ));
+
+        ArgumentCaptor<Medication> medicationCaptor = ArgumentCaptor.forClass(Medication.class);
+        verify(medicationRepository).save(medicationCaptor.capture());
+        assertEquals(7L, medicationCaptor.getValue().getCatalog().getCatalogId());
     }
 
     private static User buildUser(Long userId) {

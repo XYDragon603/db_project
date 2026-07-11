@@ -57,3 +57,15 @@ SELECT setval(
     COALESCE((SELECT MAX(audit_id) FROM audit_logs), 1),
     (SELECT COUNT(*) FROM audit_logs) > 0
 );
+
+SELECT setval(
+    pg_get_serial_sequence('medication_catalog', 'catalog_id'),
+    COALESCE((SELECT MAX(catalog_id) FROM medication_catalog), 1),
+    (SELECT COUNT(*) FROM medication_catalog) > 0
+);
+
+SELECT setval(
+    pg_get_serial_sequence('medication_brands', 'brand_id'),
+    COALESCE((SELECT MAX(brand_id) FROM medication_brands), 1),
+    (SELECT COUNT(*) FROM medication_brands) > 0
+);

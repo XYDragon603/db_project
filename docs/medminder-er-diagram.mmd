@@ -47,6 +47,32 @@ erDiagram
         timestamptz updated_at
     }
 
+    countries {
+        char country_code PK
+        varchar country_name UK
+        varchar regulatory_authority
+        boolean is_active
+    }
+
+    medication_catalog {
+        bigint catalog_id PK
+        char country_code FK
+        varchar generic_name
+        varchar dosage_form
+        varchar strength
+        boolean prescription_required
+        varchar catalog_status
+    }
+
+    medication_brands {
+        bigint brand_id PK
+        bigint catalog_id FK
+        varchar brand_name
+        varchar manufacturer
+        varchar local_registration_code
+        boolean is_active
+    }
+
     prescriptions {
         bigint prescription_id PK
         bigint medication_id FK
@@ -60,6 +86,7 @@ erDiagram
     medications {
         bigint medication_id PK
         bigint user_id FK
+        bigint catalog_id FK "optional"
         varchar medicine_name
         varchar dosage
         varchar form
@@ -129,6 +156,9 @@ erDiagram
     users ||--o{ user_roles : "is assigned"
 
     users ||--o{ medications : "owns"
+    countries ||--o{ medication_catalog : "localizes"
+    medication_catalog ||--o{ medication_brands : "offers brands"
+    medication_catalog o|--o{ medications : "optionally identifies"
     medications ||--o{ prescriptions : "has prescription metadata"
     medications ||--o{ refill_records : "receives refills"
     medications ||--o{ medication_schedules : "defines schedules"

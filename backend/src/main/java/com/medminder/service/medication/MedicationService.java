@@ -4,6 +4,7 @@ import com.medminder.domain.entity.AuditLog;
 import com.medminder.domain.entity.Medication;
 import com.medminder.domain.repository.AuditLogRepository;
 import com.medminder.domain.repository.MedicationRepository;
+import com.medminder.domain.repository.MedicationCatalogRepository;
 import com.medminder.domain.repository.UserRepository;
 import com.medminder.web.dto.CreateMedicationRequest;
 import com.medminder.web.dto.MedicationResponse;
@@ -20,15 +21,18 @@ public class MedicationService {
     private final MedicationRepository medicationRepository;
     private final UserRepository userRepository;
     private final AuditLogRepository auditLogRepository;
+    private final MedicationCatalogRepository catalogRepository;
 
     public MedicationService(
         MedicationRepository medicationRepository,
         UserRepository userRepository,
-        AuditLogRepository auditLogRepository
+        AuditLogRepository auditLogRepository,
+        MedicationCatalogRepository catalogRepository
     ) {
         this.medicationRepository = medicationRepository;
         this.userRepository = userRepository;
         this.auditLogRepository = auditLogRepository;
+        this.catalogRepository = catalogRepository;
     }
 
     public List<MedicationResponse> getMedications(Long userId) {
@@ -48,6 +52,10 @@ public class MedicationService {
 
         var medication = new Medication();
         medication.setUser(user);
+        if (request.catalogId() != null) {
+            medication.setCatalog(catalogRepository.findById(request.catalogId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Catalog item not found")));
+        }
         medication.setMedicineName(request.medicineName());
         medication.setDosage(request.dosage());
         medication.setForm(request.form());

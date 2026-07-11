@@ -23,9 +23,40 @@ CREATE TABLE IF NOT EXISTS user_roles (
     CONSTRAINT uq_user_roles_user_role UNIQUE (user_id, role_id)
 );
 
+CREATE TABLE IF NOT EXISTS countries (
+    country_code CHAR(2) PRIMARY KEY,
+    country_name VARCHAR(100) NOT NULL UNIQUE,
+    regulatory_authority VARCHAR(150) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS medication_catalog (
+    catalog_id BIGSERIAL PRIMARY KEY,
+    country_code CHAR(2) NOT NULL REFERENCES countries(country_code),
+    generic_name VARCHAR(150) NOT NULL,
+    dosage_form VARCHAR(50) NOT NULL,
+    strength VARCHAR(100) NOT NULL,
+    prescription_required BOOLEAN NOT NULL DEFAULT FALSE,
+    catalog_status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
+        CHECK (catalog_status IN ('ACTIVE', 'INACTIVE')),
+    CONSTRAINT uq_catalog_local_product
+        UNIQUE (country_code, generic_name, dosage_form, strength)
+);
+
+CREATE TABLE IF NOT EXISTS medication_brands (
+    brand_id BIGSERIAL PRIMARY KEY,
+    catalog_id BIGINT NOT NULL REFERENCES medication_catalog(catalog_id),
+    brand_name VARCHAR(150) NOT NULL,
+    manufacturer VARCHAR(150),
+    local_registration_code VARCHAR(100),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    CONSTRAINT uq_catalog_brand UNIQUE (catalog_id, brand_name)
+);
+
 CREATE TABLE IF NOT EXISTS medications (
     medication_id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(user_id),
+    catalog_id BIGINT REFERENCES medication_catalog(catalog_id),
     medicine_name VARCHAR(150) NOT NULL,
     dosage VARCHAR(100) NOT NULL,
     form VARCHAR(50) NOT NULL,
