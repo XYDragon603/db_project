@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { createSchedule, deactivateSchedule, getMedications, getSchedules } from "@/api/client";
+import { createSchedules, deactivateSchedule, getMedications, getSchedules } from "@/api/client";
 import type { LoginResponse, Medication, Schedule } from "@/api/types";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FeedbackMessage } from "@/components/shared/feedback-message";
@@ -16,6 +16,28 @@ import {
 } from "@/features/medications/display-utils";
 import { UserLayout } from "@/layouts/user-layout";
 
+type TimePreset = "MORNING" | "NOON" | "EVENING" | "BEDTIME" | "CUSTOM";
+
+interface ReminderTime {
+  preset: TimePreset;
+  time: string;
+}
+
+const TIME_PRESETS: Array<{ value: TimePreset; label: string; time?: string }> = [
+  { value: "MORNING", label: "Morning", time: "08:00" },
+  { value: "NOON", label: "Noon", time: "12:00" },
+  { value: "EVENING", label: "Evening", time: "18:00" },
+  { value: "BEDTIME", label: "Before bed", time: "22:00" },
+  { value: "CUSTOM", label: "Custom time" },
+];
+
+const DEFAULT_REMINDER_TIMES: ReminderTime[] = [
+  { preset: "MORNING", time: "08:00" },
+  { preset: "NOON", time: "12:00" },
+  { preset: "EVENING", time: "18:00" },
+  { preset: "BEDTIME", time: "22:00" },
+];
+
 export function ScheduleManagementPage({ user }: { user: LoginResponse }) {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [selectedMedicationId, setSelectedMedicationId] = useState<number | null>(null);
@@ -23,6 +45,8 @@ export function ScheduleManagementPage({ user }: { user: LoginResponse }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeletingScheduleId, setIsDeletingScheduleId] = useState<number | null>(null);
+  const [dailyDoseCount, setDailyDoseCount] = useState(1);
+  const [reminderTimes, setReminderTimes] = useState<ReminderTime[]>([DEFAULT_REMINDER_TIMES[0]]);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -111,27 +135,66 @@ export function ScheduleManagementPage({ user }: { user: LoginResponse }) {
 
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
+    const uniqueTimes = new Set(reminderTimes.map((reminder) => reminder.time));
+    if (uniqueTimes.size !== reminderTimes.length) {
+      setError("Choose a different time for each daily dose.");
+      return;
+    }
+    const existingTimes = new Set(schedules.filter((schedule) => schedule.active).map((schedule) => schedule.scheduledTime));
+    const duplicateExistingTime = reminderTimes.find((reminder) => existingTimes.has(reminder.time));
+    if (duplicateExistingTime) {
+      setError(`An active reminder already exists at ${duplicateExistingTime.time}.`);
+      return;
+    }
 
     setIsSaving(true);
     setError(null);
     setMessage(null);
     try {
-      const next = await createSchedule(user.userId, {
+      const next = await createSchedules(user.userId, reminderTimes.map((reminder) => ({
         medicationId: selectedMedicationId,
-        scheduledTime: form.get("scheduledTime"),
+        scheduledTime: reminder.time,
         doseAmount: form.get("doseAmount"),
-        frequency: form.get("frequency"),
-      });
-      setSchedules((current) => [...current, next]);
+        frequency: "DAILY",
+      })));
+      setSchedules((current) => [...current, ...next].sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime)));
       const medicationLabel = medications.find((item) => item.medicationId === selectedMedicationId)?.medicineName ?? "Schedule";
       setError(null);
-      setMessage(`Daily schedule added for ${medicationLabel}.`);
+      setMessage(`${next.length} daily ${next.length === 1 ? "reminder" : "reminders"} added for ${medicationLabel}.`);
       formElement.reset();
+      setDailyDoseCount(1);
+      setReminderTimes([DEFAULT_REMINDER_TIMES[0]]);
     } catch {
       setError("Unable to save this schedule.");
     } finally {
       setIsSaving(false);
     }
+  }
+
+  function handleDailyDoseCountChange(nextCount: number) {
+    setDailyDoseCount(nextCount);
+    setReminderTimes((current) => Array.from(
+      { length: nextCount },
+      (_, index) => current[index] ?? DEFAULT_REMINDER_TIMES[index],
+    ));
+    setError(null);
+    setMessage(null);
+  }
+
+  function handlePresetChange(index: number, preset: TimePreset) {
+    const presetTime = TIME_PRESETS.find((item) => item.value === preset)?.time;
+    setReminderTimes((current) => current.map((reminder, reminderIndex) => (
+      reminderIndex === index
+        ? { preset, time: presetTime ?? reminder.time }
+        : reminder
+    )));
+  }
+
+  function handleTimeChange(index: number, time: string) {
+    const matchedPreset = TIME_PRESETS.find((item) => item.time === time)?.value ?? "CUSTOM";
+    setReminderTimes((current) => current.map((reminder, reminderIndex) => (
+      reminderIndex === index ? { preset: matchedPreset, time } : reminder
+    )));
   }
 
   async function handleDeactivateSchedule(schedule: Schedule) {
@@ -167,7 +230,12 @@ export function ScheduleManagementPage({ user }: { user: LoginResponse }) {
       <PageHeader
         eyebrow="Schedule Management"
         title="Medication schedule setup"
-        description="The first version only supports daily schedules, which is enough for the demo-critical flow."
+        description="Choose how many times a medication is taken each day, then use a suggested time of day or set an exact reminder time."
+        actions={(
+          <Link to="/user/medications/new">
+            <Button>Add medication</Button>
+          </Link>
+        )}
       />
       {error ? <div className="mb-5"><FeedbackMessage message={error} variant="error" /></div> : null}
       {message ? <div className="mb-5"><FeedbackMessage message={message} variant="success" /></div> : null}
@@ -227,7 +295,7 @@ export function ScheduleManagementPage({ user }: { user: LoginResponse }) {
             <EmptyState
               title="No schedules created yet"
               description="Add at least one daily reminder time so today's medication cards can appear on the dashboard."
-              action={<Button onClick={() => document.querySelector<HTMLInputElement>('input[name=\"scheduledTime\"]')?.focus()}>Create first schedule</Button>}
+              action={<Button onClick={() => document.querySelector<HTMLInputElement>('input[name="scheduledTime-0"]')?.focus()}>Create first schedule</Button>}
             />
           )}
         </SectionCard>
@@ -243,30 +311,62 @@ export function ScheduleManagementPage({ user }: { user: LoginResponse }) {
               )}
             />
           ) : (
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form className="space-y-5" onSubmit={handleSubmit}>
               <label className="space-y-2">
-                <span className="text-sm font-medium text-slate-700">Scheduled time</span>
-                <input
-                  className="flex h-12 w-full rounded-2xl border border-border bg-white px-4 text-sm"
-                  name="scheduledTime"
-                  type="time"
-                  defaultValue="08:00"
-                  required
-                />
-              </label>
-              <FormInput label="Dose amount" name="doseAmount" placeholder="1" type="number" min="0.01" step="0.01" defaultValue="1" required />
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-slate-700">Frequency</span>
+                <span className="text-sm font-medium text-slate-700">Times per day</span>
                 <select
                   className="flex h-12 w-full rounded-2xl border border-border bg-white px-4 text-sm"
-                  name="frequency"
-                  defaultValue="DAILY"
+                  value={dailyDoseCount}
+                  onChange={(event) => handleDailyDoseCountChange(Number(event.target.value))}
                 >
-                  <option value="DAILY">DAILY</option>
+                  <option value={1}>Once daily</option>
+                  <option value={2}>Twice daily</option>
+                  <option value={3}>Three times daily</option>
+                  <option value={4}>Four times daily</option>
                 </select>
               </label>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-slate-700">Reminder times</p>
+                  <p className="mt-1 text-xs text-slate-500">Suggested periods fill an exact time that you can adjust.</p>
+                </div>
+                {reminderTimes.map((reminder, index) => (
+                  <div className="grid gap-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-3 sm:grid-cols-[1fr_8.5rem]" key={`reminder-${index}`}>
+                    <label className="space-y-1.5">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Dose {index + 1}</span>
+                      <select
+                        aria-label={`Dose ${index + 1} time of day`}
+                        className="flex h-11 w-full rounded-xl border border-border bg-white px-3 text-sm"
+                        value={reminder.preset}
+                        onChange={(event) => handlePresetChange(index, event.target.value as TimePreset)}
+                      >
+                        {TIME_PRESETS.map((preset) => (
+                          <option key={preset.value} value={preset.value}>{preset.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="space-y-1.5">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Exact time</span>
+                      <input
+                        aria-label={`Dose ${index + 1} exact time`}
+                        className="flex h-11 w-full rounded-xl border border-border bg-white px-3 text-sm"
+                        name={`scheduledTime-${index}`}
+                        type="time"
+                        value={reminder.time}
+                        onChange={(event) => handleTimeChange(index, event.target.value)}
+                        required
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <FormInput label="Dose amount" name="doseAmount" placeholder="1" type="number" min="0.01" step="0.01" defaultValue="1" required />
+              <div className="flex items-center justify-between rounded-2xl bg-blue-50 px-4 py-3 text-sm">
+                <span className="font-medium text-slate-700">Repeats</span>
+                <span className="font-semibold text-primary">Every day</span>
+              </div>
               <Button type="submit" className="w-full" disabled={isSaving || !selectedMedicationId}>
-                {isSaving ? "Saving..." : "Save schedule"}
+                {isSaving ? "Saving..." : `Save ${dailyDoseCount} ${dailyDoseCount === 1 ? "reminder" : "reminders"}`}
               </Button>
             </form>
           )}

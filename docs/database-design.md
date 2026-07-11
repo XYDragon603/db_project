@@ -497,21 +497,16 @@ CREATE INDEX idx_audit_logs_user_action
     ON audit_logs(user_id, action);
 ```
 
-## Mermaid ER Diagram
+## Entity-Relationship Diagram
 
-```mermaid
-erDiagram
-    users ||--o{ medications : owns
-    users ||--o{ user_roles : assigned
-    roles ||--o{ user_roles : includes
-    medications ||--o| prescriptions : has
-    medications ||--o{ medication_schedules : defines
-    medication_schedules ||--o{ dose_logs : records
-    medications ||--o{ refill_records : refilled_by
-    users ||--o{ caregiver_access : patient_user
-    users ||--o{ caregiver_access : caregiver_user
-    users ||--o{ audit_logs : creates
-```
+![MedMinder database entity-relationship diagram](medminder-er-diagram.svg)
+
+The editable Mermaid source is available in [`medminder-er-diagram.mmd`](medminder-er-diagram.mmd). A high-resolution PNG version is also available for presentations and document export.
+
+- `PK` identifies a primary key.
+- `FK` identifies a foreign key.
+- `UK` identifies a unique key.
+- The report ERD keeps the main business flow readable by omitting three redundant ownership lines from `users`. The `user_id` foreign-key fields remain visible, and their composite ownership constraints are enforced in `schema.sql`.
 
 ## Query Responsibilities
 

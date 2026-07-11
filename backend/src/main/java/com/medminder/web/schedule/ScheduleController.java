@@ -3,6 +3,7 @@ package com.medminder.web.schedule;
 import com.medminder.service.auth.AccessScopeService;
 import com.medminder.service.schedule.ScheduleService;
 import com.medminder.web.dto.CreateScheduleRequest;
+import com.medminder.web.dto.CreateSchedulesRequest;
 import com.medminder.web.dto.ScheduleResponse;
 import jakarta.validation.Valid;
 import java.security.Principal;
@@ -52,6 +53,19 @@ public class ScheduleController {
             accessScopeService.requireSelfAccess(principal.getName(), userId);
         }
         return scheduleService.createSchedule(authenticatedUserId, request);
+    }
+
+    @PostMapping("/schedules/bulk")
+    public List<ScheduleResponse> createSchedules(
+        @RequestParam(required = false) Long userId,
+        @Valid @RequestBody CreateSchedulesRequest request,
+        Principal principal
+    ) {
+        var authenticatedUserId = accessScopeService.resolveSelfUserId(principal.getName());
+        if (userId != null) {
+            accessScopeService.requireSelfAccess(principal.getName(), userId);
+        }
+        return scheduleService.createSchedules(authenticatedUserId, request.schedules());
     }
 
     @PatchMapping("/schedules/{scheduleId}/deactivate")

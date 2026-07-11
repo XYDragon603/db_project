@@ -53,6 +53,17 @@ public class ScheduleService {
 
     @Transactional
     public ScheduleResponse createSchedule(Long userId, CreateScheduleRequest request) {
+        return createScheduleRecord(userId, request);
+    }
+
+    @Transactional
+    public List<ScheduleResponse> createSchedules(Long userId, List<CreateScheduleRequest> requests) {
+        return requests.stream()
+            .map(request -> createScheduleRecord(userId, request))
+            .toList();
+    }
+
+    private ScheduleResponse createScheduleRecord(Long userId, CreateScheduleRequest request) {
         var medication = medicationRepository.findById(request.medicationId())
             .orElseThrow(() -> new IllegalArgumentException("Medication not found"));
         var user = userRepository.findById(userId)

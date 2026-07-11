@@ -79,6 +79,11 @@ export function MedicationListPage({ user }: { user: LoginResponse }) {
         eyebrow="Medication List"
         title="All medications"
         description="Review stock, thresholds, and the medication records used in the schedule flow."
+        actions={(
+          <Link to="/user/medications/new">
+            <Button>Add medication</Button>
+          </Link>
+        )}
       />
       <FilterBar placeholder="Search medications..." />
       {message ? <FeedbackMessage message={message} variant="success" /> : null}

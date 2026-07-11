@@ -181,6 +181,20 @@ export function createSchedule(userId: number, payload: Record<string, unknown>)
   });
 }
 
+export function createSchedules(userId: number, payloads: Record<string, unknown>[]) {
+  void userId;
+  return request<Schedule[]>("/schedules/bulk", {
+    method: "POST",
+    body: JSON.stringify({ schedules: payloads }),
+  }, payloads.map((payload, index) => ({
+    scheduleId: Date.now() + index,
+    scheduledTime: String(payload.scheduledTime ?? "08:00"),
+    doseAmount: String(payload.doseAmount ?? "1"),
+    frequency: String(payload.frequency ?? "DAILY"),
+    active: true,
+  })));
+}
+
 export function deactivateSchedule(userId: number, scheduleId: number) {
   void userId;
   return request<Schedule>(`/schedules/${scheduleId}/deactivate`, {

@@ -19,8 +19,10 @@ import com.medminder.domain.repository.MedicationScheduleRepository;
 import com.medminder.domain.repository.UserRepository;
 import java.math.BigDecimal;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 import com.medminder.service.schedule.ScheduleService;
+import com.medminder.web.dto.CreateScheduleRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -81,6 +83,28 @@ class ScheduleServiceTests {
         when(userRepository.findById(1L)).thenReturn(Optional.of(buildUser(1L)));
 
         assertThrows(ResponseStatusException.class, () -> scheduleService.deactivateSchedule(1L, 101L));
+    }
+
+    @Test
+    void createsMultipleDailySchedulesInOneServiceCall() {
+        var user = buildUser(1L);
+        var medication = buildMedication(10L, user);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(medicationRepository.findById(10L)).thenReturn(Optional.of(medication));
+        doAnswer(invocation -> {
+            var schedule = invocation.getArgument(0, MedicationSchedule.class);
+            schedule.setScheduleId(schedule.getScheduledTime().equals(LocalTime.of(8, 0)) ? 101L : 102L);
+            return schedule;
+        }).when(medicationScheduleRepository).save(any(MedicationSchedule.class));
+
+        var responses = scheduleService.createSchedules(1L, List.of(
+            new CreateScheduleRequest(10L, "08:00", "1", "DAILY", null, null),
+            new CreateScheduleRequest(10L, "22:00", "1", "DAILY", null, null)
+        ));
+
+        assertEquals(2, responses.size());
+        assertEquals("08:00", responses.get(0).scheduledTime());
+        assertEquals("22:00", responses.get(1).scheduledTime());
     }
 
     private static User buildUser(Long userId) {

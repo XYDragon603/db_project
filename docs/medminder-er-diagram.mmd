@@ -1,0 +1,140 @@
+---
+title: MedMinder Database Entity-Relationship Diagram
+config:
+  theme: base
+  themeVariables:
+    fontFamily: "Segoe UI, Aptos, sans-serif"
+    background: "#F7FAFF"
+    primaryColor: "#FFFFFF"
+    primaryTextColor: "#12213A"
+    primaryBorderColor: "#4F83E3"
+    lineColor: "#7890B2"
+    secondaryColor: "#EAF2FF"
+    tertiaryColor: "#F2F8FF"
+  er:
+    diagramPadding: 30
+    layoutDirection: TB
+    minEntityWidth: 190
+    minEntityHeight: 72
+    entityPadding: 14
+    stroke: "#4F83E3"
+    fill: "#FFFFFF"
+    fontSize: 13
+    useMaxWidth: true
+---
+erDiagram
+    roles {
+        bigint role_id PK
+        varchar role_name UK
+        text description
+    }
+
+    user_roles {
+        bigint user_role_id PK
+        bigint user_id FK "part of UNIQUE(user_id, role_id)"
+        bigint role_id FK
+        timestamptz assigned_at
+    }
+
+    users {
+        bigint user_id PK
+        varchar full_name
+        varchar email UK
+        varchar password_hash
+        varchar phone
+        boolean is_active
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    prescriptions {
+        bigint prescription_id PK
+        bigint medication_id FK
+        varchar prescribed_by
+        varchar clinic_name
+        date issue_date
+        text instructions
+        timestamptz created_at
+    }
+
+    medications {
+        bigint medication_id PK
+        bigint user_id FK
+        varchar medicine_name
+        varchar dosage
+        varchar form
+        integer current_quantity
+        integer refill_threshold
+        boolean is_active
+        date start_date
+        date end_date
+        text notes
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    medication_schedules {
+        bigint schedule_id PK
+        bigint medication_id FK
+        bigint user_id FK "must match medication owner"
+        time scheduled_time
+        numeric dose_amount
+        varchar frequency
+        date start_date
+        date end_date
+        boolean is_active
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    dose_logs {
+        bigint dose_log_id PK
+        bigint schedule_id FK
+        bigint user_id FK "must match schedule owner"
+        timestamptz scheduled_datetime
+        timestamptz actual_taken_time
+        varchar status
+        timestamptz created_at
+    }
+
+    refill_records {
+        bigint refill_id PK
+        bigint medication_id FK
+        bigint user_id FK "must match medication owner"
+        date refill_date
+        integer quantity_added
+        text note
+        timestamptz created_at
+    }
+
+    caregiver_access {
+        bigint access_id PK
+        bigint user_id FK
+        bigint caregiver_id FK
+        varchar access_status
+        timestamptz granted_at
+    }
+
+    audit_logs {
+        bigint audit_id PK
+        bigint user_id FK
+        varchar action
+        varchar target_table
+        bigint target_id
+        text details
+        timestamptz created_at
+    }
+
+    roles ||--o{ user_roles : "defines"
+    users ||--o{ user_roles : "is assigned"
+
+    users ||--o{ medications : "owns"
+    medications ||--o{ prescriptions : "has prescription metadata"
+    medications ||--o{ refill_records : "receives refills"
+    medications ||--o{ medication_schedules : "defines schedules"
+    medication_schedules ||--o{ dose_logs : "produces dose events"
+
+
+    users ||--o{ caregiver_access : "patient grants access"
+    users ||--o{ caregiver_access : "caregiver receives access"
+    users ||--o{ audit_logs : "performs audited actions"
