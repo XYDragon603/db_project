@@ -26,48 +26,87 @@ export function AddMedicationPage({ user }: { user: LoginResponse }) {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [manualEntry, setManualEntry] = useState(false);
   const [countries, setCountries] = useState<CatalogCountry[]>([]);
   const [catalogItems, setCatalogItems] = useState<MedicationCatalogItem[]>([]);
   const [countryCode, setCountryCode] = useState("");
+  const [countryName, setCountryName] = useState("");
   const [catalogId, setCatalogId] = useState("");
   const [brandName, setBrandName] = useState("");
   const [medicineName, setMedicineName] = useState("");
   const [dosage, setDosage] = useState("");
   const [form, setForm] = useState("Tablet");
+  const [isCatalogLoading, setIsCatalogLoading] = useState(false);
 
   useEffect(() => {
     void getCatalogCountries()
       .then((items) => {
         setCountries(items);
         setCountryCode(items[0]?.countryCode ?? "");
+        setCountryName(items[0]?.countryName ?? "");
       })
-      .catch(() => setManualEntry(true));
+      .catch(() => setError("Unable to load saved countries. You can still type one manually."));
   }, []);
 
   useEffect(() => {
-    if (!countryCode || manualEntry) {
+    if (!countryCode) {
+      setCatalogItems([]);
+      setCatalogId("");
       return;
     }
+    setIsCatalogLoading(true);
+    setError(null);
     void getMedicationCatalog(countryCode)
       .then((items) => {
         setCatalogItems(items);
+        const firstItem = items[0];
+        setCatalogId(firstItem ? String(firstItem.catalogId) : "");
+        setBrandName("");
+        setMedicineName(firstItem?.genericName ?? "");
+        setDosage(firstItem?.strength ?? "");
+        setForm(firstItem?.dosageForm ?? "Tablet");
+        if (items.length === 0) {
+          setError("No medications are available for this country yet. You can enter one manually.");
+        }
+      })
+      .catch(() => {
+        setCatalogItems([]);
         setCatalogId("");
         setBrandName("");
+        setError("Unable to load the medication catalog. You can still enter the medication manually.");
       })
-      .catch(() => setError("Unable to load the medication catalog. You can still enter the medication manually."));
-  }, [countryCode, manualEntry]);
+      .finally(() => setIsCatalogLoading(false));
+  }, [countryCode]);
 
-  function selectCatalogItem(value: string) {
-    setCatalogId(value);
-    const selected = catalogItems.find((item) => item.catalogId === Number(value));
+  function changeCountry(value: string) {
+    setCountryName(value);
+    const selected = countries.find((country) =>
+      country.countryName.toLowerCase() === value.trim().toLowerCase()
+      || country.countryCode.toLowerCase() === value.trim().toLowerCase()
+    );
+    setCountryCode(selected?.countryCode ?? "");
     if (!selected) {
-      return;
+      setCatalogItems([]);
+      setCatalogId("");
+      setBrandName("");
     }
-    setMedicineName(selected.genericName);
-    setDosage(selected.strength);
-    setForm(selected.dosageForm);
-    setBrandName("");
+  }
+
+  function changeMedication(value: string) {
+    setMedicineName(value);
+    const normalizedValue = value.trim().toLowerCase();
+    const selected = catalogItems.find((item) =>
+      item.genericName.toLowerCase() === normalizedValue
+      || `${item.genericName} · ${item.strength}`.toLowerCase() === normalizedValue
+    );
+    if (selected) {
+      setCatalogId(String(selected.catalogId));
+      setMedicineName(selected.genericName);
+      setDosage(selected.strength);
+      setForm(selected.dosageForm);
+    } else {
+      setCatalogId("");
+      setBrandName("");
+    }
   }
 
   function selectBrand(value: string) {
@@ -121,32 +160,24 @@ export function AddMedicationPage({ user }: { user: LoginResponse }) {
                 <p className="font-semibold text-slate-900">Medication identification</p>
                 <p className="mt-1 text-sm text-slate-600">Catalog information varies by country and is not medical advice.</p>
               </div>
-              <Button type="button" variant="secondary" onClick={() => {
-                setManualEntry((current) => !current);
-                setCatalogId("");
-                setMedicineName("");
-                setDosage("");
-                setForm("Tablet");
-              }}>
-                {manualEntry ? "Browse local catalog" : "Enter manually"}
-              </Button>
             </div>
           </div>
-          {!manualEntry ? (
-            <>
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-slate-700">Country or region</span>
-                <select className="flex h-12 w-full rounded-2xl border border-border bg-white px-4 text-sm" value={countryCode} onChange={(event) => setCountryCode(event.target.value)}>
-                  {countries.map((country) => <option key={country.countryCode} value={country.countryCode}>{country.countryName}</option>)}
-                </select>
-              </label>
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-slate-700">Generic medication</span>
-                <select className="flex h-12 w-full rounded-2xl border border-border bg-white px-4 text-sm" value={catalogId} onChange={(event) => selectCatalogItem(event.target.value)} required>
-                  <option value="">Select a medication</option>
-                  {catalogItems.map((item) => <option key={item.catalogId} value={item.catalogId}>{item.genericName} · {item.strength}</option>)}
-                </select>
-              </label>
+          <label className="space-y-2">
+            <span className="text-sm font-medium text-slate-700">Country or region</span>
+            <input className="flex h-12 w-full rounded-2xl border border-border bg-white px-4 text-sm" list="catalog-countries" value={countryName} onChange={(event) => changeCountry(event.target.value)} placeholder="Select or type a country" autoComplete="off" required />
+            <datalist id="catalog-countries">
+              {countries.map((country) => <option key={country.countryCode} value={country.countryName}>{country.countryCode}</option>)}
+            </datalist>
+            <span className="block text-xs text-slate-500">Choose a listed country to browse its catalog, or type another country.</span>
+          </label>
+          <label className="space-y-2">
+            <span className="text-sm font-medium text-slate-700">Generic medication</span>
+            <input className="flex h-12 w-full rounded-2xl border border-border bg-white px-4 text-sm" list="catalog-medications" value={medicineName} onChange={(event) => changeMedication(event.target.value)} placeholder={isCatalogLoading ? "Loading medications..." : "Select or type a medication"} autoComplete="off" required />
+            <datalist id="catalog-medications">
+              {catalogItems.map((item) => <option key={item.catalogId} value={`${item.genericName} · ${item.strength}`} />)}
+            </datalist>
+            <span className="block text-xs text-slate-500">Catalog matches fill the details automatically; new names remain editable.</span>
+          </label>
               <label className="space-y-2 md:col-span-2">
                 <span className="text-sm font-medium text-slate-700">Brand (optional)</span>
                 <select className="flex h-12 w-full rounded-2xl border border-border bg-white px-4 text-sm" value={brandName} onChange={(event) => selectBrand(event.target.value)} disabled={!catalogId}>
@@ -155,12 +186,9 @@ export function AddMedicationPage({ user }: { user: LoginResponse }) {
                 </select>
               </label>
               <input type="hidden" name="catalogId" value={catalogId} />
-            </>
-          ) : null}
-          <FormInput label="Medicine name" name="medicineName" placeholder="Metformin" value={medicineName} onChange={(event) => setMedicineName(event.target.value)} readOnly={!manualEntry} required />
-          <FormInput label="Dosage" name="dosage" placeholder="500mg" value={dosage} onChange={(event) => setDosage(event.target.value)} readOnly={!manualEntry} required />
-          <FormSelect label="Form" name="form" options={["Tablet", "Capsule", "Liquid"]} value={form} onChange={(event) => setForm(event.target.value)} disabled={!manualEntry} required />
-          {!manualEntry ? <input type="hidden" name="form" value={form} /> : null}
+          <input type="hidden" name="medicineName" value={medicineName} />
+          <FormInput label="Dosage" name="dosage" placeholder="500mg" value={dosage} onChange={(event) => setDosage(event.target.value)} required />
+          <FormSelect label="Form" name="form" options={["Tablet", "Capsule", "Liquid"]} value={form} onChange={(event) => setForm(event.target.value)} required />
           <FormInput label="Current quantity" name="currentQuantity" placeholder="30" type="number" min="0" defaultValue="30" required />
           <FormInput label="Refill threshold" name="refillThreshold" placeholder="5" type="number" min="0" defaultValue="5" required />
           <DateInput label="Start date" name="startDate" />
