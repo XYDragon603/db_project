@@ -198,12 +198,12 @@ BEGIN
         RAISE EXCEPTION 'Schedule not found or not owned by user';
     END IF;
 
-    INSERT INTO dose_logs (
+    INSERT INTO dose_logs AS inserted_dose (
         schedule_id, user_id, scheduled_datetime, actual_taken_time, status
     ) VALUES (
         p_schedule_id, p_user_id, p_scheduled_datetime, p_actual_taken_time, p_status
     )
-    RETURNING dose_log_id INTO v_new_dose_log_id;
+    RETURNING inserted_dose.dose_log_id INTO v_new_dose_log_id;
 
     IF p_status = 'TAKEN' THEN
         UPDATE medications
@@ -314,9 +314,11 @@ BEGIN
         RAISE EXCEPTION 'Medication not found or not owned by user';
     END IF;
 
-    INSERT INTO refill_records (medication_id, user_id, quantity_added, note)
+    INSERT INTO refill_records AS inserted_refill (
+        medication_id, user_id, quantity_added, note
+    )
     VALUES (p_medication_id, p_user_id, p_quantity_added, p_note)
-    RETURNING refill_id INTO v_refill_id;
+    RETURNING inserted_refill.refill_id INTO v_refill_id;
 
     UPDATE medications
     SET current_quantity = current_quantity + p_quantity_added,
