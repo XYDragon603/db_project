@@ -127,7 +127,13 @@ AS $$
     ORDER BY mc.generic_name, mb.brand_name;
 $$;
 
--- Representative insert used by Add Medication.
+/*
+Representative application INSERT used by Add Medication.
+
+This example is intentionally commented out because the :named_parameters are
+bound by the application and are not valid when this file is executed directly
+in PostgreSQL.
+
 INSERT INTO medications (
     user_id, catalog_id, medicine_name, dosage, form, current_quantity,
     refill_threshold, is_active, start_date, end_date, notes
@@ -135,6 +141,7 @@ INSERT INTO medications (
     :user_id, :catalog_id, :medicine_name, :dosage, :form, :current_quantity,
     :refill_threshold, TRUE, :start_date, :end_date, :notes
 );
+*/
 
 CREATE OR REPLACE FUNCTION getMedicationSchedules(p_user_id BIGINT, p_medication_id BIGINT)
 RETURNS TABLE (
@@ -453,3 +460,27 @@ AS $$
       AND (p_end_date IS NULL OR audit_logs.created_at::date <= p_end_date)
     ORDER BY created_at DESC;
 $$;
+
+-- Installation verification: this should return all 12 MedMinder functions.
+SELECT
+    n.nspname AS schema_name,
+    p.proname AS function_name,
+    pg_get_function_identity_arguments(p.oid) AS parameters
+FROM pg_proc p
+JOIN pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname = current_schema()
+  AND lower(p.proname) IN (
+      'authenticateuser',
+      'gettodaymedicationschedule',
+      'getusermedications',
+      'getmedicationcatalog',
+      'getmedicationschedules',
+      'logdose',
+      'getdosehistory',
+      'getrefillalerts',
+      'addrefillrecord',
+      'getadherencesummary',
+      'getcaregiverpatientoverview',
+      'getauditlogs'
+  )
+ORDER BY p.proname;
